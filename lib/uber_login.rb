@@ -1,5 +1,6 @@
 require 'uber_login/version'
 require 'uber_login/cookie_manager'
+require 'uber_login/configuration'
 require 'securerandom'
 require 'bcrypt'
 
