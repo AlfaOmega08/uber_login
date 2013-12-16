@@ -66,6 +66,30 @@ describe UberLogin do
     end
   end
 
+  describe '#logout_all' do
+    it 'deletes session[:uid]' do
+      controller.login(user)
+      controller.logout_all
+      expect(session[:uid]).to be_nil
+    end
+
+    it 'deletes session[:uid]' do
+      controller.logout_all
+      expect(session[:uid]).to be_nil
+    end
+
+    it 'deletes login cookies' do
+      controller.logout_all
+      expect(cookies[:uid]).to be_nil
+      expect(cookies[:ulogin]).to be_nil
+    end
+
+    it 'deletes any token associated with the user' do
+      expect_any_instance_of(LoginToken).to receive :destroy
+      controller.logout_all
+    end
+  end
+
   describe '#save_to_database' do
     before {
       cookies[:uid] = "100"
