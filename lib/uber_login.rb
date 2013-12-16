@@ -15,6 +15,15 @@ module UberLogin
     end
   end
 
+  def logout
+    session.delete(:uid)
+
+    delete_from_database if cookies[:uid]
+
+    cookies.delete :uid
+    cookies.delete :ulogin
+  end
+
   private
   def generate_sequence_and_token
     # 9 and 21 are both multiple of 3, so we do not get base64 padding (==)
@@ -33,6 +42,11 @@ module UberLogin
     )
 
     token_row.save!
+  end
+
+  def delete_from_database
+    token = LoginToken.find_by(uid: cookies[:uid], sequence: cookies[:sequence])
+    token.destroy
   end
 
   def class_exists?(class_name)

@@ -25,7 +25,9 @@ end
 class LoginToken
   attr_accessor :uid, :sequence, :token
 
-  def initialize(attributes)
+  @@count = 0
+
+  def initialize(attributes = {})
     attributes.each do |k, v|
       send("#{k}=", v)
     end
@@ -33,5 +35,18 @@ class LoginToken
 
   def save!
     true
+    @@count += 1
+  end
+
+  def self.count
+    @@count
+  end
+
+  def destroy
+    @@count -= 1
+  end
+
+  def self.find_by(hash)
+    new
   end
 end
