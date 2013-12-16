@@ -4,21 +4,16 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'uber_login/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "uber_login"
+  spec.name          = 'uber_login'
   spec.version       = UberLogin::VERSION
-  spec.authors       = ["Francesco Boffa"]
-  spec.email         = ["fra.boffa@gmail.com"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
-  spec.homepage      = ""
-  spec.license       = "MIT"
+  spec.author        = 'Francesco Boffa'
+  spec.email         = 'fra.boffa@gmail.com'
+  spec.description   = 'Login and logout management with secure "remember me" capabilities'
+  spec.summary       = 'Tired of rewriting the login, logout and current_user methods for the millionth time? Scared of all the security concerns of writing your own authentication methods? This gem will solve all of this problems and still leave you the control over your application.'
+  spec.homepage      = 'https://github.com/AlfaOmega08/uber_login'
+  spec.license       = 'MIT'
 
-  spec.files         = `git ls-files`.split($/)
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
+  spec.files = Dir.glob("lib/**/*")
+  spec.test_files = Dir.glob("spec/**/*")
   spec.require_paths = ["lib"]
-
-  spec.add_development_dependency "bundler", "~> 1.3"
-  spec.add_development_dependency "rake"
-  spec.add_development_dependency "activerecord-nulldb-adapter"
 end
