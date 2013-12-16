@@ -8,8 +8,26 @@ describe CookieManager do
       before { LoginToken.stub(:find_by).and_return LoginToken.new(token: BCrypt::Password.create("beef")) }
 
       context 'The token is validated' do
-        it 'returns true' do
-          expect(cookie_manager.valid?).to be_true
+        context 'no expiration time is configured' do
+          it 'returns true' do
+            expect(cookie_manager.valid?).to be_true
+          end
+        end
+
+        context 'the token is expired' do
+          before { UberLogin::Configuration.any_instance.stub(:login_token_expiration).and_return 10 }
+
+          it 'returns false' do
+            expect(cookie_manager.valid?).to be_false
+          end
+        end
+
+        context 'the token is not expired' do
+          before { UberLogin::Configuration.any_instance.stub(:login_token_expiration).and_return 1000 }
+
+          it 'returns true' do
+            expect(cookie_manager.valid?).to be_true
+          end
         end
       end
 

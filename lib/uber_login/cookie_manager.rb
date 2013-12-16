@@ -13,7 +13,12 @@ class CookieManager
   def valid?
     sequence, token = sequence_and_token
     token_row = LoginToken.find_by(uid: @cookies[:uid], sequence: sequence)
-    token_match(token_row.token, token)
+    if expired?(token_row)
+      token_row.destroy
+      false
+    else
+      token_match(token_row.token, token)
+    end
   rescue
     false
   end
@@ -45,5 +50,13 @@ class CookieManager
 
   def token
     sequence_and_token[1]
+  end
+
+  def expired?(row)
+    if UberLogin.configuration.login_token_expiration
+      row.updated_at < Time.now - UberLogin.configuration.login_token_expiration
+    else
+      false
+    end
   end
 end

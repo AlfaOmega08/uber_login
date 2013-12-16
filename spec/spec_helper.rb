@@ -49,6 +49,10 @@ class LoginToken
   def self.find_by(hash)
     new
   end
+
+  def updated_at
+    Time.now - 100
+  end
 end
 
 class User
