@@ -1,6 +1,9 @@
 module UberLogin
   class Configuration
+    attr_accessor :allow_multiple_login
+
     def initialize
+      self.allow_multiple_login = true
     end
   end
 

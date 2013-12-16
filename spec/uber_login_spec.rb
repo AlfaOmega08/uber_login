@@ -35,6 +35,15 @@ describe UberLogin do
         controller.login(user, true)
       end
     end
+
+    context 'only one session is allowed per user' do
+      before { UberLogin::Configuration.any_instance.stub(:allow_multiple_login).and_return false }
+
+      it 'clears all the other tokens' do
+        expect_any_instance_of(LoginToken).to receive :destroy
+        controller.login(user)
+      end
+    end
   end
 
   describe '#logout' do

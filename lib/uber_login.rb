@@ -26,6 +26,8 @@ module UberLogin
   # If +remember+ is true all the needed cookies are set.
   # session[+:uid+] is set to user.id
   def login(user, remember = false)
+    logout_all unless UberLogin.configuration.allow_multiple_login
+
     session[:uid] = user.id
     generate_and_set_cookies(user.id) if remember
   end
