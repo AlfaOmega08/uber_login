@@ -50,3 +50,17 @@ class LoginToken
     new
   end
 end
+
+class User
+  attr_accessor :id
+
+  def initialize(attributes = {})
+    attributes.each do |k, v|
+      send("#{k}=", v)
+    end
+  end
+
+  def self.find(id)
+    User.new(id: id)
+  end
+end
