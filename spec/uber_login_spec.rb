@@ -67,9 +67,14 @@ describe UberLogin do
   end
 
   describe '#save_to_database' do
+    before {
+      cookies[:uid] = "100"
+      cookies[:ulogin] = "dead:beef"
+    }
+
     it 'saves the triplet to the database' do
       expect_any_instance_of(LoginToken).to receive(:save!)
-      controller.send('save_to_database', '100', 'token', 'sequence')
+      controller.send('save_to_database')
     end
   end
 
@@ -92,7 +97,7 @@ describe UberLogin do
         }
 
         context 'the cookies are valid' do
-          before { controller.stub(:valid_login_cookies?).and_return true }
+          before { CookieManager.any_instance.stub(:valid?).and_return true }
 
           it 'returns an user object with that uid' do
             expect(controller.send(:current_user_uncached).id).to eq "100"
@@ -116,7 +121,7 @@ describe UberLogin do
         end
 
         context 'the cookies are not valid' do
-          before { controller.stub(:valid_login_cookies?).and_return false }
+          before { CookieManager.any_instance.stub(:valid?).and_return false }
 
           it 'returns nil' do
             expect(controller.send(:current_user_uncached)).to be_nil
@@ -133,39 +138,6 @@ describe UberLogin do
       context 'cookies are not set' do
         it 'returns nil' do
           expect(controller.send(:current_user_uncached)).to be_nil
-        end
-      end
-    end
-  end
-
-  describe '#valid_login_cookies?' do
-    before {
-      cookies[:uid] = 100
-      cookies[:ulogin] = "dead:beef"
-    }
-
-    context 'User id and sequence combination is not found' do
-      before { LoginToken.stub(:find_by).and_return nil }
-
-      it 'returns false' do
-        expect(controller.send(:valid_login_cookies?)).to be_false
-      end
-    end
-
-    context 'User id and sequence combination is found' do
-      before { LoginToken.stub(:find_by).and_return LoginToken.new(token: BCrypt::Password.create("beef")) }
-
-      context 'The token is validated' do
-        it 'returns true' do
-          expect(controller.send(:valid_login_cookies?)).to be_true
-        end
-      end
-
-      context 'The token is not validated' do
-        before { BCrypt::Password.any_instance.stub(:==).and_return false }
-
-        it 'returns false' do
-          expect(controller.send(:valid_login_cookies?)).to be_false
         end
       end
     end

@@ -1,4 +1,5 @@
 require 'uber_login/version'
+require 'uber_login/cookie_manager'
 require 'securerandom'
 require 'bcrypt'
 
@@ -25,10 +26,7 @@ module UberLogin
   # session[+:uid+] is set to user.id
   def login(user, remember = false)
     session[:uid] = user.id
-
-    if remember
-      generate_and_set_cookies(user.id)
-    end
+    generate_and_set_cookies(user.id) if remember
   end
 
   ##
@@ -38,10 +36,14 @@ module UberLogin
   def logout
     session.delete(:uid)
     delete_from_database if cookies[:uid]
-    reset_login_cookies
+    cookie_manager.clear
   end
 
   private
+  def cookie_manager
+    @cookie_manager ||= CookieManager.new(cookies)
+  end
+
   # See +current_user+
   def current_user_uncached
     login_from_cookies if cookies[:uid] and !session[:uid]
@@ -53,11 +55,11 @@ module UberLogin
   ##
   # Attempts a login from the +:uid+ and +:ulogin+ cookies.
   def login_from_cookies
-    if valid_login_cookies?
+    if cookie_manager.valid?
       session[:uid] = cookies[:uid]
       generate_new_token
     else
-      reset_login_cookies
+      cookie_manager.clear
     end
   end
 
@@ -78,32 +80,28 @@ module UberLogin
   # +:token+ is stored +bcrypt+ed in the database and then compared on login
   def generate_and_set_cookies(uid)
     sequence, token = generate_sequence_and_token
-
-    cookies.permanent[:uid] = uid
-    cookies.permanent[:ulogin] = build_login_cookie(sequence, token)
-    save_to_database(uid, sequence, token)
+    cookie_manager.persistent_login(uid, sequence, token)
+    save_to_database
   end
 
   ##
-  # Clears +:uid+ and +:ulogin+ cookies
-  def reset_login_cookies
-    cookies.delete :uid
-    cookies.delete :ulogin
+  # Creates a LoginToken based on the +uid+, +sequence+ and hashed +token+
+  def save_to_database
+    token_row = LoginToken.new(
+        uid: cookies[:uid],
+        sequence: cookie_manager.sequence,
+        token: cookie_manager.hashed_token
+    )
+
+    token_row.save!
   end
 
   ##
-  # Returns true if the cookies are matched with the stored login token
-  def valid_login_cookies?
-    sequence, token = sequence_and_token_from_cookie
-    token_row = LoginToken.find_by(uid: cookies[:uid], sequence: sequence)
-
-    if token_row
-      BCrypt::Password.new(token_row.token) == token
-    else
-      false
-    end
-  rescue  # ORMs can be configure to throw instead of returning nils
-    false
+  # Removes a LoginToken with +uid+ and +sequence+ taken from the cookies
+  def delete_from_database
+    sequence = cookie_manager.sequence
+    token = LoginToken.find_by(uid: cookies[:uid], sequence: sequence)
+    token.destroy
   end
 
   def generate_sequence_and_token
@@ -111,38 +109,10 @@ module UberLogin
     [ SecureRandom.base64(9), SecureRandom.base64(21) ]
   end
 
-  def build_login_cookie(sequence, token)
-    "#{sequence}:#{token}"
-  end
-
-  def sequence_and_token_from_cookie
-    cookies[:ulogin].split(':')
-  end
-
-  def save_to_database(uid, sequence, token)
-    token_row = LoginToken.new(
-        uid: uid,
-        sequence: sequence,
-        token: hash_token(token)
-    )
-
-    token_row.save!
-  end
-
-  def delete_from_database
-    sequence = sequence_and_token_from_cookie[0]
-    token = LoginToken.find_by(uid: cookies[:uid], sequence: sequence)
-    token.destroy
-  end
-
   def class_exists?(class_name)
     klass = Module.const_get(class_name)
     return klass.is_a?(Class)
   rescue NameError
     return false
-  end
-
-  def hash_token(token)
-    BCrypt::Password.create(token).to_s
   end
 end
