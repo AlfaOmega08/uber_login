@@ -7,6 +7,8 @@ module UberLogin
 
       def find_composite(uid, composite)
         find(uid, TokenEncoder.sequence(composite))
+      rescue  # composite might invalid if cookies are tampered
+        nil
       end
 
       def build(uid, composite)
@@ -18,7 +20,7 @@ module UberLogin
       end
 
       def delete_all(uid)
-        LoginToken.find_by(uid: uid).destroy
+        LoginToken.destroy_all(uid: uid)
       end
 
       def delete_all_but(uid, composite)

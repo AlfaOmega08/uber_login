@@ -63,6 +63,10 @@ class LoginToken
     new
   end
 
+  def self.destroy_all(hash)
+
+  end
+
   def updated_at
     Time.now - 100
   end
@@ -78,6 +82,6 @@ class User
   end
 
   def self.find(id)
-    User.new(id: id)
+    id ? User.new(id: id) : nil
   end
 end

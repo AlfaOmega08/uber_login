@@ -12,9 +12,11 @@ module UberLogin
       @request = request
     end
 
-    def persistent_login(uid, sequence, token)
+    ##
+    # Sets the +:uid+ and +:ulogin+ cookies for next login
+    def persistent_login(uid, composite)
       @cookies.permanent[:uid] = uid
-      @cookies.permanent[:ulogin] = TokenEncoder.encode(sequence, token)
+      @cookies.permanent[:ulogin] = TokenEncoder.encode_array composite
     end
 
     ##
@@ -24,11 +26,19 @@ module UberLogin
       @cookies.delete :ulogin
     end
 
+    ##
+    # Returns true if cookies are considered valid from TokenEncoder validation rules
     def valid?
       token_row = Storage.find_composite(@cookies[:uid], @cookies[:ulogin])
       TokenValidator.new(TokenEncoder.token(@cookies[:ulogin]), @request).valid?(token_row)
     rescue
       false
+    end
+
+    ##
+    # Returns true if the +:uid+ and +:ulogin+ cookies are set
+    def login_cookies?
+      @cookies[:uid] and @cookies[:ulogin]
     end
   end
 end

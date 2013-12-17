@@ -12,6 +12,34 @@ describe UberLogin do
         controller.login(user)
         expect(session[:uid]).to eq 100
       end
+
+      context 'sessions have stored tokens' do
+        before { UberLogin.configuration.strong_sessions = true }
+
+        it 'saves a token to database' do
+          expect_any_instance_of(LoginToken).to receive :save!
+          controller.login(user)
+        end
+
+        it 'sets session[:ulogin]' do
+          controller.login(user)
+          expect(session[:ulogin]).to_not be_nil
+        end
+      end
+
+      context 'sessions do not have stored tokens' do
+        before { UberLogin.configuration.strong_sessions = false }
+
+        it 'does not save a token to database' do
+          expect_any_instance_of(LoginToken).to_not receive :save!
+          controller.login(user)
+        end
+
+        it 'does not set session[:ulogin]' do
+          controller.login(user)
+          expect(session[:ulogin]).to be_nil
+        end
+      end
     end
 
     context 'remember is true' do
@@ -27,7 +55,7 @@ describe UberLogin do
 
       it 'sets the ulogin cookie' do
         controller.login(user, true)
-        expect(cookies[:ulogin]).to match(/[a-z0-9+\/]+:[a-z0-9+\/]+/i)
+        expect(cookies[:ulogin]).to match(/[a-z0-9_\-]+:[a-z0-9+\/]+/i)
       end
 
       it 'sets both cookies as persistent' do
@@ -37,37 +65,40 @@ describe UberLogin do
     end
 
     context 'only one session is allowed per user' do
-      before { UberLogin::Configuration.any_instance.stub(:allow_multiple_login).and_return false }
+      before { UberLogin.configuration.allow_multiple_login = false }
 
       it 'clears all the other tokens' do
-        expect_any_instance_of(LoginToken).to receive :destroy
+        expect(LoginToken).to receive :destroy_all
         controller.login(user)
       end
     end
   end
 
   describe '#logout' do
+    before { controller.login(user, true) }
+
     context 'sequence is nil' do
       it 'deletes session[:uid]' do
-        controller.login(user)
         controller.logout
         expect(session[:uid]).to be_nil
       end
 
+      it 'deletes session[:ulogin]' do
+        controller.logout
+        expect(session[:ulogin]).to be_nil
+      end
+
+      it 'deletes cookies[:uid]' do
+        controller.logout
+        expect(cookies[:uid]).to be_nil
+      end
+
+      it 'deletes cookies[:ulogin]' do
+        controller.logout
+        expect(cookies[:ulogin]).to be_nil
+      end
+
       context 'persistent login was made' do
-        before { controller.login(user, true) }
-
-        it 'deletes session[:uid]' do
-          controller.logout
-          expect(session[:uid]).to be_nil
-        end
-
-        it 'deletes login cookies' do
-          controller.logout
-          expect(cookies[:uid]).to be_nil
-          expect(cookies[:ulogin]).to be_nil
-        end
-
         it 'deletes a LoginToken row' do
           expect {
             controller.logout
@@ -76,9 +107,37 @@ describe UberLogin do
       end
     end
 
-    context 'sequence is not nil' do
-      before { controller.login(user, true) }
+    context 'sequence is equal to current user sequence' do
+      it 'deletes session[:uid]' do
+        controller.logout(UberLogin::TokenEncoder.sequence(cookies[:ulogin]))
+        expect(session[:uid]).to be_nil
+      end
 
+      it 'deletes session[:ulogin]' do
+        controller.logout(UberLogin::TokenEncoder.sequence(cookies[:ulogin]))
+        expect(session[:ulogin]).to be_nil
+      end
+
+      it 'deletes cookies[:uid]' do
+        controller.logout(UberLogin::TokenEncoder.sequence(cookies[:ulogin]))
+        expect(cookies[:uid]).to be_nil
+      end
+
+      it 'deletes cookies[:ulogin]' do
+        controller.logout(UberLogin::TokenEncoder.sequence(cookies[:ulogin]))
+        expect(cookies[:ulogin]).to be_nil
+      end
+
+      context 'persistent login was made' do
+        it 'deletes a LoginToken row' do
+          expect {
+            controller.logout(UberLogin::TokenEncoder.sequence(cookies[:ulogin]))
+          }.to change{ LoginToken.count }.by -1
+        end
+      end
+    end
+
+    context 'sequence is not nil' do
       it 'does not clear session[:uid]' do
         controller.logout('sequence')
         expect(session[:uid]).to_not be_nil
@@ -103,72 +162,42 @@ describe UberLogin do
   end
 
   describe '#logout_all' do
-    it 'deletes session[:uid]' do
-      controller.login(user)
-      controller.logout_all
-      expect(session[:uid]).to be_nil
-    end
+    before { controller.login(user, true) }
 
     it 'deletes session[:uid]' do
       controller.logout_all
       expect(session[:uid]).to be_nil
     end
 
-    it 'deletes login cookies' do
+    it 'deletes session[:ulogin]' do
+      controller.logout_all
+      expect(session[:ulogin]).to be_nil
+    end
+
+    it 'deletes cookies[:uid]' do
       controller.logout_all
       expect(cookies[:uid]).to be_nil
-      expect(cookies[:ulogin]).to be_nil
     end
 
+    it 'deletes cookies[:ulogin]' do
+      controller.logout_all
+      expect(cookies[:ulogin]).to be_nil
+    end
     it 'deletes any token associated with the user' do
-      expect_any_instance_of(LoginToken).to receive :destroy
+      expect(LoginToken).to receive :destroy_all
       controller.logout_all
     end
   end
 
-  describe '#save_to_database' do
-    before {
-      cookies[:uid] = "100"
-      cookies[:ulogin] = "dead:beef"
-    }
-
-    it 'saves the triplet to the database' do
-      expect_any_instance_of(LoginToken).to receive(:save!)
-      controller.send('save_to_database')
-    end
-  end
-
-  describe '#set_user_data' do
-    let(:row) { LoginToken.new }
-
-    context 'the token table has an "ip_address" field' do
-      it 'sets the field to the client IP' do
-        expect(row).to receive(:ip_address=).with('192.168.1.1')
-        controller.send('set_user_data', row)
-      end
-    end
-
-    context 'the token table has an "os" field' do
-      it 'sets the field to the client Operating System' do
-        expect(row).to receive(:os=).with('Linux x86_64')
-        controller.send('set_user_data', row)
-      end
-    end
-
-    context 'the token table has a "browser" field' do
-      it 'sets the field to the client Browser and version' do
-        expect(row).to receive(:browser=).with('Chrome 32.0.1667.0')
-        controller.send('set_user_data', row)
-      end
-    end
-  end
-
-  describe '#current_user_uncached' do
+  describe '#current_user' do
     context 'session[:uid] is set' do
-      before { session[:uid] = 100 }
+      before {
+        session[:uid] = 100
+        session[:ulogin] = 'dead:beef'
+      }
 
       it 'returns an user object with that uid' do
-        expect(controller.send(:current_user_uncached).id).to eq 100
+        expect(controller.current_user.id).to eq 100
       end
     end
 
@@ -185,21 +214,21 @@ describe UberLogin do
           before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return true }
 
           it 'returns an user object with that uid' do
-            expect(controller.send(:current_user_uncached).id).to eq "100"
+            expect(controller.current_user.id).to eq "100"
           end
 
           it 'deletes the token from the database' do
             expect_any_instance_of(LoginToken).to receive(:destroy)
-            controller.send(:current_user_uncached)
+            controller.current_user
           end
 
           it 'creates a new token for the next login' do
             expect_any_instance_of(LoginToken).to receive(:save!)
-            controller.send(:current_user_uncached)
+            controller.current_user
           end
 
           it 'refreshes the cookie' do
-            controller.send(:current_user_uncached)
+            controller.current_user
             expect(cookies[:uid]).to eq "100"
             expect(cookies[:ulogin]).to_not eq "whatever:beef"
           end
@@ -209,11 +238,11 @@ describe UberLogin do
           before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return false }
 
           it 'returns nil' do
-            expect(controller.send(:current_user_uncached)).to be_nil
+            expect(controller.current_user).to be_nil
           end
 
           it 'clears the cookies for this user' do
-            controller.send(:current_user_uncached)
+            controller.current_user
             expect(cookies[:uid]).to be_nil
             expect(cookies[:ulogin]).to be_nil
           end
@@ -222,7 +251,7 @@ describe UberLogin do
 
       context 'cookies are not set' do
         it 'returns nil' do
-          expect(controller.send(:current_user_uncached)).to be_nil
+          expect(controller.current_user).to be_nil
         end
       end
     end

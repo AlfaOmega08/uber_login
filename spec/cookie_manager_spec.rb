@@ -9,12 +9,12 @@ describe UberLogin::CookieManager do
 
   describe '#persistent_login' do
     it 'sets the :uid cookie' do
-      cookie_manager.persistent_login(100, 'dead', 'beef')
+      cookie_manager.persistent_login(100, [ 'dead', 'beef' ])
       expect(cookies[:uid]).to eq 100
     end
 
     it 'sets the :ulogin cookie' do
-      cookie_manager.persistent_login(100, 'dead', 'beef')
+      cookie_manager.persistent_login(100, [ 'dead', 'beef' ])
       expect(cookies[:ulogin]).to eq 'dead:beef'
     end
   end
