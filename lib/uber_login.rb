@@ -54,7 +54,7 @@ module UberLogin
 
   private
   def cookie_manager
-    @cookie_manager ||= CookieManager.new(cookies)
+    @cookie_manager ||= CookieManager.new(cookies, request)
   end
 
   # See +current_user+

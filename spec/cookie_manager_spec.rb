@@ -1,11 +1,18 @@
 require 'spec_helper'
 
 describe CookieManager do
-  let(:cookie_manager) { CookieManager.new(uid: 100, ulogin: "dead:beef") }
+  let(:cookie_manager) { CookieManager.new({ uid: 100, ulogin: "dead:beef" }, FakeRequest.new) }
 
   describe '#valid_login_cookies?' do
     context 'User id and sequence combination is found' do
-      before { LoginToken.stub(:find_by).and_return LoginToken.new(token: BCrypt::Password.create("beef")) }
+      let(:fake_token) {
+        LoginToken.new(
+          token: BCrypt::Password.create("beef"),
+          ip_address: '192.168.1.1'
+        )
+      }
+
+      before { LoginToken.stub(:find_by).and_return fake_token }
 
       context 'The token is validated' do
         context 'no expiration time is configured' do
@@ -24,6 +31,14 @@ describe CookieManager do
 
         context 'the token is not expired' do
           before { UberLogin::Configuration.any_instance.stub(:login_token_expiration).and_return 1000 }
+
+          it 'returns true' do
+            expect(cookie_manager.valid?).to be_true
+          end
+        end
+
+        context 'tokens are tied to IPs' do
+          before { UberLogin::Configuration.any_instance.stub(:tie_token_to_ip).and_return true }
 
           it 'returns true' do
             expect(cookie_manager.valid?).to be_true

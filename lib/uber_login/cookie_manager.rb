@@ -1,6 +1,7 @@
 class CookieManager
-  def initialize(cookies)
+  def initialize(cookies, request)
     @cookies = cookies
+    @request = request
   end
 
   ##
@@ -13,12 +14,21 @@ class CookieManager
   def valid?
     sequence, token = sequence_and_token
     token_row = LoginToken.find_by(uid: @cookies[:uid], sequence: sequence)
+
+    return false unless token_match(token_row.token, token)
+
+    if UberLogin.configuration.tie_token_to_ip
+      if token_row.ip_address != @request.remote_ip
+        return false
+      end
+    end
+
     if expired?(token_row)
       token_row.destroy
-      false
-    else
-      token_match(token_row.token, token)
+      return false
     end
+
+    true
   rescue
     false
   end
