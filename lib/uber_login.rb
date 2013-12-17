@@ -119,10 +119,13 @@ module UberLogin
   ##
   # Removes a LoginToken with current +uid+ and given +sequence+
   # If +sequence+ is nil it is taken from the cookies.
+  #
+  # A token might have already been destroyed from another client with the intent of disconnecting
+  # the current session.
   def delete_from_database(sequence = nil)
     sequence = sequence || cookie_manager.sequence
     token = LoginToken.find_by(uid: cookies[:uid], sequence: sequence)
-    token.destroy
+    token.destroy if token
   end
 
   def generate_sequence_and_token
