@@ -64,4 +64,24 @@ describe UberLogin::CookieManager do
       end
     end
   end
+
+  describe '#login_cookies?' do
+    before { controller.login(user, true) }
+
+    context 'both cookies are set' do
+      it 'returns true' do
+        expect(cookie_manager.login_cookies?).to be_true
+      end
+    end
+
+    it 'returns false if uid is missing' do
+      cookies.delete :uid
+      expect(cookie_manager.login_cookies?).to be_false
+    end
+
+    it 'returns false if ulogin is missing' do
+      cookies.delete :ulogin
+      expect(cookie_manager.login_cookies?).to be_false
+    end
+  end
 end

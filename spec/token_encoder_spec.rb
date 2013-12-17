@@ -15,6 +15,16 @@ describe UberLogin::TokenEncoder do
     end
   end
 
+  describe '#encode_array' do
+    it 'retuns a string' do
+      expect(UberLogin::TokenEncoder.encode_array([ 'what', 'ever' ]).class).to eq String
+    end
+
+    it 'returns the two arguments separated by colons' do
+      expect(UberLogin::TokenEncoder.encode_array([ 'what', 'ever' ])).to eq 'what:ever'
+    end
+  end
+
   describe '#decode' do
     it 'returns an array of size 2' do
       expect(UberLogin::TokenEncoder.decode('dead:beef').size).to eq 2

@@ -12,6 +12,7 @@ module UberLogin
       @validity_checks.all? { |check| send(check, row) }
     end
 
+    private
     def token_match(row)
       BCrypt::Password.new(row.token) == @token
     end

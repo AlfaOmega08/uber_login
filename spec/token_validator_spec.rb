@@ -20,7 +20,7 @@ describe UberLogin::TokenValidator do
       token_validator.valid?(fake_token)
     end
 
-    context 'if IP are tied to Tokens' do
+    context 'if IP are tied to tokens' do
       before { UberLogin.configuration.tie_tokens_to_ip = true }
       let(:token_validator) { UberLogin::TokenValidator.new('secret', FakeRequest.new) }
 
@@ -36,7 +36,7 @@ describe UberLogin::TokenValidator do
       token_validator.valid?(fake_token)
     end
 
-    context 'if Tokens do expire' do
+    context 'if tokens do expire' do
       before { UberLogin.configuration.token_expiration = 86400 }
       let(:token_validator) { UberLogin::TokenValidator.new('secret', FakeRequest.new) }
 
@@ -61,48 +61,6 @@ describe UberLogin::TokenValidator do
       it 'returns false' do
         expect(token_validator.valid?(fake_token)).to be_false
       end
-    end
-  end
-
-  describe '#token_match' do
-    before { UberLogin::TokenEncoder.stub(:token).and_return 'secret' }
-
-    it 'returns true if tokens are matched' do
-      row = double(token: BCrypt::Password.create('secret', cost: 1))
-      expect(token_validator.token_match(row)).to be_true
-    end
-
-    it 'returns false if tokens are not matched' do
-      row = double(token: BCrypt::Password.create('s3cr3t', cost: 1))
-      expect(token_validator.token_match(row)).to be_false
-    end
-  end
-
-  describe '#ip_equality' do
-    before { FakeRequest.any_instance.stub(:remote_ip).and_return '10.10.10.10' }
-
-    it 'returns true if IPs are equal' do
-      row = double(ip_address: '10.10.10.10')
-      expect(token_validator.ip_equality(row)).to be_true
-    end
-
-    it 'returns false if IPs are different' do
-      row = double(ip_address: '192.168.1.1')
-      expect(token_validator.ip_equality(row)).to be_false
-    end
-  end
-
-  describe '#expiration' do
-    before { UberLogin.configuration.token_expiration = 86400 }
-
-    it 'returns true if less than token_expiration seconds are past' do
-      row = double(updated_at: Time.now - 100)
-      expect(token_validator.expiration(row)).to be_true
-    end
-
-    it 'returns false if more than token_expiration seconds are past' do
-      row = double(updated_at: Time.now - 86401)
-      expect(token_validator.expiration(row)).to be_false
     end
   end
 end
