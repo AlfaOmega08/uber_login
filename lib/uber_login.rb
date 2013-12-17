@@ -51,7 +51,7 @@ module UberLogin
   # Deletes all "remember me" session for this user from whatever device
   # he/she has ever used to login.
   def logout_all
-    LoginToken.find_by(uid: session[:uid]).destroy
+    Storage.delete_all session[:uid]
     session.delete :uid
     cookie_manager.clear
   end

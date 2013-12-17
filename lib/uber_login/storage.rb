@@ -17,6 +17,14 @@ module UberLogin
           token: TokenEncoder.token_hash(composite)
         )
       end
+
+      def delete_all(uid)
+        LoginToken.find_by(uid: uid).destroy
+      end
+
+      def delete_all_but(uid, composite)
+        # TODO: How to make this ORM agnostic?
+      end
     end
   end
 end
