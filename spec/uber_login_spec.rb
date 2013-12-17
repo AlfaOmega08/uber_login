@@ -182,7 +182,7 @@ describe UberLogin do
         }
 
         context 'the cookies are valid' do
-          before { CookieManager.any_instance.stub(:valid?).and_return true }
+          before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return true }
 
           it 'returns an user object with that uid' do
             expect(controller.send(:current_user_uncached).id).to eq "100"
@@ -206,7 +206,7 @@ describe UberLogin do
         end
 
         context 'the cookies are not valid' do
-          before { CookieManager.any_instance.stub(:valid?).and_return false }
+          before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return false }
 
           it 'returns nil' do
             expect(controller.send(:current_user_uncached)).to be_nil

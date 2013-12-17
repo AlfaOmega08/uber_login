@@ -1,7 +1,7 @@
 require 'spec_helper'
 
-describe CookieManager do
-  let(:cookie_manager) { CookieManager.new({ uid: 100, ulogin: "dead:beef" }, FakeRequest.new) }
+describe UberLogin::CookieManager do
+  let(:cookie_manager) { UberLogin::CookieManager.new({ uid: 100, ulogin: "dead:beef" }, FakeRequest.new) }
 
   describe '#valid?' do
     context 'User id and sequence combination is found' do
