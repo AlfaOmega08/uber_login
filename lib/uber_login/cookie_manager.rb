@@ -1,5 +1,6 @@
 require 'uber_login/storage'
 require 'uber_login/token_encoder'
+require 'uber_login/token_validator'
 
 ##
 # This class handles the +:uid+ and +:ulogin+ cookies
@@ -9,10 +10,6 @@ module UberLogin
     def initialize(cookies, request)
       @cookies = cookies
       @request = request
-      @validity_checks = [ :token_match ]
-
-      @validity_checks << :ip_equality if UberLogin.configuration.tie_tokens_to_ip
-      @validity_checks << :expiration if UberLogin.configuration.token_expiration
     end
 
 
@@ -30,23 +27,9 @@ module UberLogin
 
     def valid?
       token_row = Storage.find_composite(@cookies[:uid], @cookies[:ulogin])
-      @validity_checks.all? { |check| send(check, token_row) }
+      TokenValidator.new(TokenEncoder.token(@cookies[:ulogin]), @request).valid?(token_row)
     rescue
       false
-    end
-
-    # Validity checks
-
-    def token_match(row)
-      BCrypt::Password.new(row.token) == TokenEncoder.token(@cookies[:ulogin])
-    end
-
-    def ip_equality(row)
-      row.ip_address == @request.remote_ip
-    end
-
-    def expiration(row)
-      row.updated_at >= Time.now - UberLogin.configuration.token_expiration
     end
   end
 end

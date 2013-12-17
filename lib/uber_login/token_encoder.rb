@@ -3,6 +3,11 @@ require 'bcrypt'
 module UberLogin
   class TokenEncoder
     class << self
+      def generate
+        # 9 and 21 are both multiple of 3, so we do not get base64 padding (==)
+        [ SecureRandom.base64(9), SecureRandom.base64(21) ]
+      end
+
       def encode(sequence, token)
         sequence + ':' + token
       end

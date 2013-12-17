@@ -97,7 +97,7 @@ module UberLogin
   # +:sequence+ is used to choose between all possible user login tokens
   # +:token+ is stored +bcrypt+ed in the database and then compared on login
   def generate_and_set_cookies(uid)
-    sequence, token = generate_sequence_and_token
+    sequence, token = TokenEncoder.generate
     cookie_manager.persistent_login(uid, sequence, token)
     save_to_database
   end
@@ -121,11 +121,6 @@ module UberLogin
     sequence = sequence || TokenEncoder.sequence(cookies[:ulogin])
     token = Storage.find(cookies[:uid], sequence)
     token.destroy if token
-  end
-
-  def generate_sequence_and_token
-    # 9 and 21 are both multiple of 3, so we do not get base64 padding (==)
-    [ SecureRandom.base64(9), SecureRandom.base64(21) ]
   end
 
   def set_user_data(row)
