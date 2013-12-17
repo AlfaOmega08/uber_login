@@ -48,6 +48,8 @@ describe CookieManager do
       end
 
       context 'all checks return true' do
+        before { Array.any_instance.stub(:all?).and_return true }
+
         it 'returns true' do
           expect(cookie_manager.valid?).to be_true
         end
@@ -72,7 +74,7 @@ describe CookieManager do
   end
 
   describe '#token_match' do
-    before { cookie_manager.stub(:token).and_return 'secret' }
+    before { UberLogin::TokenEncoder.stub(:token).and_return 'secret' }
 
     it 'returns true if tokens are matched' do
       row = double(token: BCrypt::Password.create('secret', cost: 1))

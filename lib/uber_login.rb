@@ -105,12 +105,7 @@ module UberLogin
   ##
   # Creates a LoginToken based on the +uid+, +sequence+ and hashed +token+
   def save_to_database
-    token_row = LoginToken.new(
-        uid: cookies[:uid],
-        sequence: cookie_manager.sequence,
-        token: cookie_manager.hashed_token
-    )
-
+    token_row = Storage.build(cookies[:uid], cookies[:ulogin])
     set_user_data token_row
 
     token_row.save!
@@ -123,8 +118,8 @@ module UberLogin
   # A token might have already been destroyed from another client with the intent of disconnecting
   # the current session.
   def delete_from_database(sequence = nil)
-    sequence = sequence || cookie_manager.sequence
-    token = LoginToken.find_by(uid: cookies[:uid], sequence: sequence)
+    sequence = sequence || TokenEncoder.sequence(cookies[:ulogin])
+    token = Storage.find(cookies[:uid], sequence)
     token.destroy if token
   end
 

@@ -1,3 +1,6 @@
+require 'uber_login/storage'
+require 'uber_login/token_encoder'
+
 ##
 # This class handles the +:uid+ and +:ulogin+ cookies
 # It builds and sets the cookies, clears them, checks for their validity.
@@ -19,7 +22,7 @@ class CookieManager
   end
 
   def valid?
-    token_row = LoginToken.find_by(uid: @cookies[:uid], sequence: sequence)
+    token_row = UberLogin::Storage.find_composite(@cookies[:uid], @cookies[:ulogin])
     @validity_checks.all? { |check| send(check, token_row) }
   rescue
     false
@@ -31,29 +34,13 @@ class CookieManager
 
   def persistent_login(uid, sequence, token)
     @cookies.permanent[:uid] = uid
-    @cookies.permanent[:ulogin] = ulogin_cookie(sequence, token)
-  end
-
-  def ulogin_cookie(sequence, token)
-    sequence + ':' + token
-  end
-
-  def sequence_and_token
-    @cookies[:ulogin].split(':')
-  end
-
-  def sequence
-    sequence_and_token[0]
-  end
-
-  def token
-    sequence_and_token[1]
+    @cookies.permanent[:ulogin] = UberLogin::TokenEncoder.encode(sequence, token)
   end
 
   # Validity checks
 
   def token_match(row)
-    BCrypt::Password.new(row.token) == token
+    BCrypt::Password.new(row.token) == UberLogin::TokenEncoder.token(@cookies[:ulogin])
   end
 
   def ip_equality(row)
