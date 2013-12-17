@@ -59,10 +59,9 @@ module UberLogin
 
   # See +current_user+
   def current_user_uncached
-    login_from_cookies if cookies[:uid] and !session[:uid]
-    if session[:uid]
-      User.find(session[:uid])
-    end
+    sid = session[:uid]
+    sid = login_from_cookies if cookies[:uid] and !sid
+    User.find(sid) if sid
   end
 
   ##
@@ -71,8 +70,10 @@ module UberLogin
     if cookie_manager.valid?
       session[:uid] = cookies[:uid]
       generate_new_token
+      session[:uid]
     else
       cookie_manager.clear
+      nil
     end
   end
 
@@ -124,7 +125,7 @@ module UberLogin
     [ SecureRandom.base64(9), SecureRandom.base64(21) ]
   end
 
-  def set_user_data row
+  def set_user_data(row)
     user_agent = UserAgent.parse(request.user_agent)
 
     row.ip_address = request.remote_ip if row.respond_to? :ip_address=

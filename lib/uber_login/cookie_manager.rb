@@ -1,7 +1,14 @@
+##
+# This class handles the +:uid+ and +:ulogin+ cookies
+# It builds and sets the cookies, clears them, checks for their validity.
 class CookieManager
   def initialize(cookies, request)
     @cookies = cookies
     @request = request
+    @validity_checks = [ :token_match ]
+
+    @validity_checks << :ip_equality if UberLogin.configuration.tie_tokens_to_ip
+    @validity_checks << :expiration if UberLogin.configuration.token_expiration
   end
 
   ##
@@ -12,33 +19,14 @@ class CookieManager
   end
 
   def valid?
-    sequence, token = sequence_and_token
     token_row = LoginToken.find_by(uid: @cookies[:uid], sequence: sequence)
-
-    return false unless token_match(token_row.token, token)
-
-    if UberLogin.configuration.tie_token_to_ip
-      if token_row.ip_address != @request.remote_ip
-        return false
-      end
-    end
-
-    if expired?(token_row)
-      token_row.destroy
-      return false
-    end
-
-    true
+    @validity_checks.all? { |check| send(check, token_row) }
   rescue
     false
   end
 
   def hashed_token
     BCrypt::Password.create(token).to_s
-  end
-
-  def token_match(hashed, clear)
-    BCrypt::Password.new(hashed) == clear
   end
 
   def persistent_login(uid, sequence, token)
@@ -62,11 +50,17 @@ class CookieManager
     sequence_and_token[1]
   end
 
-  def expired?(row)
-    if UberLogin.configuration.login_token_expiration
-      row.updated_at < Time.now - UberLogin.configuration.login_token_expiration
-    else
-      false
-    end
+  # Validity checks
+
+  def token_match(row)
+    BCrypt::Password.new(row.token) == token
+  end
+
+  def ip_equality(row)
+    row.ip_address == @request.remote_ip
+  end
+
+  def expiration(row)
+    row.updated_at >= Time.now - UberLogin.configuration.token_expiration
   end
 end
