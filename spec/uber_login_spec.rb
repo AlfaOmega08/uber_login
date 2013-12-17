@@ -111,6 +111,31 @@ describe UberLogin do
     end
   end
 
+  describe '#set_user_data' do
+    let(:row) { LoginToken.new }
+
+    context 'the token table has an "ip_address" field' do
+      it 'sets the field to the client IP' do
+        expect(row).to receive(:ip_address=).with('192.168.1.1')
+        controller.send('set_user_data', row)
+      end
+    end
+
+    context 'the token table has an "os" field' do
+      it 'sets the field to the client Operating System' do
+        expect(row).to receive(:os=).with('Linux x86_64')
+        controller.send('set_user_data', row)
+      end
+    end
+
+    context 'the token table has a "browser" field' do
+      it 'sets the field to the client Browser and version' do
+        expect(row).to receive(:browser=).with('Chrome 32.0.1667.0')
+        controller.send('set_user_data', row)
+      end
+    end
+  end
+
   describe '#current_user_uncached' do
     context 'session[:uid] is set' do
       before { session[:uid] = 100 }

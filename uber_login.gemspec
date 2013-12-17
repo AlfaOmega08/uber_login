@@ -13,6 +13,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/AlfaOmega08/uber_login'
   spec.license       = 'MIT'
 
+  spec.add_runtime_dependency 'useragent', '>= 0.10.0'
   spec.files = Dir.glob("lib/**/*")
   spec.test_files = Dir.glob("spec/**/*")
   spec.require_paths = ["lib"]

@@ -8,15 +8,27 @@ class FakeCookieJar < Hash
   end
 end
 
+class FakeRequest
+  def remote_ip
+    '192.168.1.1'
+  end
+
+  def user_agent
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1667.0 Safari/537.36"
+  end
+end
+
 class ApplicationController
   include UberLogin
 
   attr_accessor :session
   attr_accessor :cookies
+  attr_accessor :request
 
   def initialize
     @session = {}
     @cookies = FakeCookieJar.new
+    @request = FakeRequest.new
   end
 end
 
@@ -24,6 +36,7 @@ end
 # Mongoid and MongoMapper should be just fine and probably others too.
 class LoginToken
   attr_accessor :uid, :sequence, :token
+  attr_accessor :ip_address, :os, :browser
 
   @@count = 0
 

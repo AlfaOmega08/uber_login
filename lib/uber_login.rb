@@ -3,6 +3,7 @@ require 'uber_login/cookie_manager'
 require 'uber_login/configuration'
 require 'securerandom'
 require 'bcrypt'
+require 'user_agent'
 
 module UberLogin
   ##
@@ -105,6 +106,8 @@ module UberLogin
         token: cookie_manager.hashed_token
     )
 
+    set_user_data token_row
+
     token_row.save!
   end
 
@@ -121,10 +124,11 @@ module UberLogin
     [ SecureRandom.base64(9), SecureRandom.base64(21) ]
   end
 
-  def class_exists?(class_name)
-    klass = Module.const_get(class_name)
-    return klass.is_a?(Class)
-  rescue NameError
-    return false
+  def set_user_data row
+    user_agent = UserAgent.parse(request.user_agent)
+
+    row.ip_address = request.remote_ip if row.respond_to? :ip_address=
+    row.os = user_agent.os if row.respond_to? :os=
+    row.browser = user_agent.browser + ' ' + user_agent.version if row.respond_to? :browser=
   end
 end
