@@ -1,4 +1,3 @@
-
 module UberLogin
   class Storage
     class << self

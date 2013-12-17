@@ -34,9 +34,9 @@ module UberLogin
   end
 
   ##
-  # Clears session[:uid]
-  # If remember cookies were set they're cleared and the token is
-  # removed from the database.
+  # If sequence is nil it clears the current session and if remember cookies are in place they're cleared
+  # and corresponding token removed from the database.
+  # If sequence is not nil it only removes the sequence and token from the database.
   def logout(sequence = nil)
     if sequence
       delete_from_database(sequence)

@@ -12,7 +12,6 @@ module UberLogin
       @request = request
     end
 
-
     def persistent_login(uid, sequence, token)
       @cookies.permanent[:uid] = uid
       @cookies.permanent[:ulogin] = TokenEncoder.encode(sequence, token)
