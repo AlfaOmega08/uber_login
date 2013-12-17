@@ -47,29 +47,56 @@ describe UberLogin do
   end
 
   describe '#logout' do
-    it 'deletes session[:uid]' do
-      controller.login(user)
-      controller.logout
-      expect(session[:uid]).to be_nil
-    end
-
-    context 'persistent login was made' do
-      before { controller.login(user, true) }
-
+    context 'sequence is nil' do
       it 'deletes session[:uid]' do
+        controller.login(user)
         controller.logout
         expect(session[:uid]).to be_nil
       end
 
-      it 'deletes login cookies' do
-        controller.logout
-        expect(cookies[:uid]).to be_nil
-        expect(cookies[:ulogin]).to be_nil
+      context 'persistent login was made' do
+        before { controller.login(user, true) }
+
+        it 'deletes session[:uid]' do
+          controller.logout
+          expect(session[:uid]).to be_nil
+        end
+
+        it 'deletes login cookies' do
+          controller.logout
+          expect(cookies[:uid]).to be_nil
+          expect(cookies[:ulogin]).to be_nil
+        end
+
+        it 'deletes a LoginToken row' do
+          expect {
+            controller.logout
+          }.to change{ LoginToken.count }.by -1
+        end
+      end
+    end
+
+    context 'sequence is not nil' do
+      before { controller.login(user, true) }
+
+      it 'does not clear session[:uid]' do
+        controller.logout('sequence')
+        expect(session[:uid]).to_not be_nil
+      end
+
+      it 'does not clear cookies[:uid]' do
+        controller.logout('sequence')
+        expect(cookies[:uid]).to_not be_nil
+      end
+
+      it 'does not clear cookies[:ulogin]' do
+        controller.logout('sequence')
+        expect(cookies[:ulogin]).to_not be_nil
       end
 
       it 'deletes a LoginToken row' do
         expect {
-          controller.logout
+          controller.logout('sequence')
         }.to change{ LoginToken.count }.by -1
       end
     end

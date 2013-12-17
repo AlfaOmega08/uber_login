@@ -37,10 +37,14 @@ module UberLogin
   # Clears session[:uid]
   # If remember cookies were set they're cleared and the token is
   # removed from the database.
-  def logout
-    session.delete(:uid)
-    delete_from_database if cookies[:uid]
-    cookie_manager.clear
+  def logout(sequence = nil)
+    if sequence
+      delete_from_database(sequence)
+    else
+      session.delete(:uid)
+      delete_from_database if cookies[:uid]
+      cookie_manager.clear
+    end
   end
 
   ##
@@ -113,9 +117,10 @@ module UberLogin
   end
 
   ##
-  # Removes a LoginToken with +uid+ and +sequence+ taken from the cookies
-  def delete_from_database
-    sequence = cookie_manager.sequence
+  # Removes a LoginToken with current +uid+ and given +sequence+
+  # If +sequence+ is nil it is taken from the cookies.
+  def delete_from_database(sequence = nil)
+    sequence = sequence || cookie_manager.sequence
     token = LoginToken.find_by(uid: cookies[:uid], sequence: sequence)
     token.destroy
   end
