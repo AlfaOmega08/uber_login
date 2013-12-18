@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = UberLogin::VERSION
   spec.author        = 'Francesco Boffa'
   spec.email         = 'fra.boffa@gmail.com'
-  spec.description   = 'Login and logout management with secure "remember me" capabilities'
+  spec.description   = 'Login and logout management with secure "remember me" capabilities and complete session control. You can even force a user to logout!'
   spec.summary       = 'Tired of rewriting the login, logout and current_user methods for the millionth time? Scared of all the security concerns of writing your own authentication methods? This gem will solve all of this problems and still leave you the control over your application.'
   spec.homepage      = 'https://github.com/AlfaOmega08/uber_login'
   spec.license       = 'MIT'
