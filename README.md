@@ -63,6 +63,8 @@ uber_login will always set any cookie with the httponly flag. If HTTPS is detect
 
 ## Usage
 
+Checkout the [uber_login demo app](https://github.com/AlfaOmega08/uber_login_demo)?) to see uber_login in action.
+
     class SessionController < ApplicationController
       def create
         user = User.find_by_email(params[:email])
