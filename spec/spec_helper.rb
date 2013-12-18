@@ -6,6 +6,14 @@ class FakeCookieJar < Hash
   def permanent
     self
   end
+
+  def []=(key, val)
+    if val.class == Hash
+      super(key, val[:value])
+    else
+      super(key, val)
+    end
+  end
 end
 
 class FakeRequest
@@ -15,6 +23,10 @@ class FakeRequest
 
   def user_agent
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1667.0 Safari/537.36"
+  end
+
+  def ssl?
+    true
   end
 end
 

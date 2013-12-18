@@ -15,8 +15,8 @@ module UberLogin
     ##
     # Sets the +:uid+ and +:ulogin+ cookies for next login
     def persistent_login(uid, composite)
-      @cookies.permanent[:uid] = uid
-      @cookies.permanent[:ulogin] = TokenEncoder.encode_array composite
+      set_cookie(:uid, uid)
+      set_cookie(:ulogin, TokenEncoder.encode_array(composite))
     end
 
     ##
@@ -39,6 +39,11 @@ module UberLogin
     # Returns true if the +:uid+ and +:ulogin+ cookies are set
     def login_cookies?
       @cookies[:uid] and @cookies[:ulogin]
+    end
+
+    private
+    def set_cookie(key, value)
+      @cookies.permanent[key] = { value: value, httponly: true, secure: @request.ssl? }
     end
   end
 end
