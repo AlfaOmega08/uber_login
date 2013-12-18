@@ -145,11 +145,21 @@ module UberLogin
   end
 
   def set_user_data(row)
-    user_agent = UserAgent.parse(request.user_agent)
-
     row.ip_address = request.remote_ip if row.respond_to? :ip_address=
-    row.os = (user_agent.os || '') if row.respond_to? :os=
-    row.browser = (user_agent.browser || '') + ' ' + user_agent.version if row.respond_to? :browser=
+    row.os = os_string if row.respond_to? :os=
+    row.browser = browser_string if row.respond_to? :browser=
+  end
+
+  def user_agent
+    @user_agent ||= UserAgent.parse(request.user_agent)
+  end
+
+  def os_string
+    user_agent.os || ''
+  end
+
+  def browser_string
+    (user_agent.browser || '') + ' ' + (user_agent.version || '')
   end
 
   def strong_sessions
