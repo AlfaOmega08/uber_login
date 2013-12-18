@@ -56,6 +56,11 @@ If the login_tokens table has `ip_address`, `os` or `browser` fields UberLogin w
 on persistent login. These can be used for data analysis or to enforce tokens to came from the same IP/OS/Browser combination
 (a nice solution to cookie stealing, but would also prevent legitimate users who often change IP during the day to be disconnected).
 
+Prevent replay attacks by using HTTPS on each and every single page of your application or, at least, set
+session_storage to active_record_storage, memcached_storage, or any other kind of non client storage like mongoid_storage.
+
+uber_login will always set any cookie with the httponly flag. If HTTPS is detected cookies are set with the secure flag too.
+
 ## Usage
 
     class SessionController < ApplicationController
@@ -80,6 +85,7 @@ UberLogin is also configurable. Create a `config/initializers/uber_login.rb` fil
       config.allow_multiple_login = true
       config.token_expiration = nil
       config.tie_tokens_to_ip = false
+      config.strong_sessions = true
     end
 
 Those are the default values.
@@ -92,7 +98,13 @@ You can set a `token_expiration`. If the tokens are older than that, they're not
     config.token_expiration = 1.month
 
 You can set `allow_multiple_login` to false to prevent multiple persistent login. That is... a login from a machine
-will clear all other !!PERSISTENT!! logins on any other machine.
+will clear all other logins on any other machine.
+
+`strong_sessions` will make non persistent sessions to be saved in the database too. On each request the session token
+is checked against the database just like the cookies one. It won't refresh it, however. This allows you to do nice
+things, like logging out users, just by removing the token from the database. Or having a full list of open sessions of
+any kind on any device. Even though this is strongly suggested to be +true+, it might impact performance, issuing a
+query on almost each page load. Be sure to index :uid and :sequence together on the +login_tokens+ table.
 
 ## Contributing
 
