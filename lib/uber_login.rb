@@ -148,8 +148,8 @@ module UberLogin
     user_agent = UserAgent.parse(request.user_agent)
 
     row.ip_address = request.remote_ip if row.respond_to? :ip_address=
-    row.os = user_agent.os if row.respond_to? :os=
-    row.browser = user_agent.browser + ' ' + user_agent.version if row.respond_to? :browser=
+    row.os = (user_agent.os || '') if row.respond_to? :os=
+    row.browser = (user_agent.browser || '') + ' ' + user_agent.version if row.respond_to? :browser=
   end
 
   def strong_sessions
