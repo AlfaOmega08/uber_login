@@ -5,8 +5,16 @@ require 'uber_login/session_manager'
 require 'securerandom'
 require 'bcrypt'
 require 'user_agent'
+require 'active_support'
 
 module UberLogin
+  include ActiveSupport::Callbacks
+  extend ActiveSupport::Concern
+
+  included do
+    define_callbacks :login, :logout
+  end
+
   ##
   # Returns the logged in user.
   # If session[+:uid+] is set:
@@ -34,14 +42,16 @@ module UberLogin
   def login(user, remember = false)
     logout_all unless UberLogin.configuration.allow_multiple_login
 
-    if strong_sessions or remember
-      composite = generate_and_save_token(user.id)
-      cookie_manager.persistent_login(user.id, composite) if remember
-    else
-      composite = nil
-    end
+    run_callbacks :login do
+      if strong_sessions or remember
+        composite = generate_and_save_token(user.id)
+        cookie_manager.persistent_login(user.id, composite) if remember
+      else
+        composite = nil
+      end
 
-    session_manager.login(user.id, composite)
+      session_manager.login(user.id, composite)
+    end
   end
 
   ##
@@ -49,12 +59,14 @@ module UberLogin
   # and corresponding token removed from the database.
   # If sequence is not nil it only removes the sequence and token from the database.
   def logout(sequence = nil)
-    if sequence.nil? or sequence == current_sequence
-      delete_from_database if cookies[:uid] or strong_sessions
-      session_manager.clear
-      cookie_manager.clear
-    else
-      delete_from_database(sequence)
+    run_callbacks :logout do
+      if sequence.nil? or sequence == current_sequence
+        delete_from_database if cookies[:uid] or strong_sessions
+        session_manager.clear
+        cookie_manager.clear
+      else
+        delete_from_database(sequence)
+      end
     end
   end
 
@@ -78,8 +90,8 @@ module UberLogin
 
   # See +current_user+
   def current_user_uncached
-    if session[:uid]
-      logout if strong_sessions and !session_manager.valid?
+    if session[:uid] and strong_sessions
+      logout unless session_manager.valid?
     else
       login_from_cookies if cookie_manager.login_cookies?
     end

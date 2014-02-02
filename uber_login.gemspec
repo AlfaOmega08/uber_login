@@ -14,6 +14,7 @@ Gem::Specification.new do |spec|
   spec.license       = 'MIT'
 
   spec.add_runtime_dependency 'useragent', '>= 0.10.0'
+  spec.add_runtime_dependency 'activesupport'
   spec.files = Dir.glob("lib/**/*")
   spec.test_files = Dir.glob("spec/**/*")
   spec.require_paths = ["lib"]

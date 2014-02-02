@@ -40,6 +40,11 @@ describe UberLogin do
           expect(session[:ulogin]).to be_nil
         end
       end
+
+      it 'runs the :login callbacks' do
+        expect(controller).to receive(:run_callbacks).with(:login)
+        controller.login(user)
+      end
     end
 
     context 'remember is true' do
@@ -104,6 +109,11 @@ describe UberLogin do
             controller.logout
           }.to change{ LoginToken.count }.by -1
         end
+      end
+
+      it 'runs the :logout callbacks' do
+        expect(controller).to receive(:run_callbacks).with(:logout)
+        controller.logout
       end
     end
 
@@ -212,6 +222,11 @@ describe UberLogin do
 
         context 'the cookies are valid' do
           before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return true }
+
+          it 'runs the :login callbacks' do
+            expect(controller).to receive(:run_callbacks)
+            controller.login(user, true)
+          end
 
           it 'returns an user object with that uid' do
             expect(controller.current_user.id).to eq "100"
