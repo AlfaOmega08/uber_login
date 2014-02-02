@@ -1,14 +1,15 @@
 # UberLogin
 
-UberLogin was made to have simpler login and logout controllers. It is very difficult to have a secure authentication
-system. And when you can't use Devise, AuthLogic, Clearance, or if you just want to be free of those heavy gems and yet
-be safe with your login.
+UberLogin was made to have simpler login and logout logic. It is very difficult to build a strong authentication
+system. If you can't use Devise, AuthLogic, Clearance, or you just want to be free of those heavy gems and yet
+be safe with your login, this gem is for you.
 
-How you register users is not UberLogin problem. Password validation or recovery either (may I suggest
-[has_editable_password](https://github.com/AlfaOmega08/has_editable_password)?).
+UberLogin does not take care of user registration, password validation or recovery (may I suggest
+[has_editable_password](https://github.com/AlfaOmega08/has_editable_password)?). It does not take care of login throttling
+or all the logging related to log in.
 
-UberLogin exposes only three methods: login, logout and logout_all. Assuming you already authenticated your user,
-using email or username, or ID number, password or SMS with two phase authentication, you will now call:
+UberLogin only exposes three methods: login, logout and logout_all. Assuming you already authenticated your user,
+using email or username, or ID number, password or SMS with two phase authentication, retina or finger scansion, you will now call:
 
     login(user)
 
@@ -63,7 +64,7 @@ uber_login will always set any cookie with the httponly flag. If HTTPS is detect
 
 ## Usage
 
-Checkout the [uber_login demo app](https://github.com/AlfaOmega08/uber_login_demo)?) to see uber_login in action.
+Checkout the [uber_login demo app](https://github.com/AlfaOmega08/uber_login_demo) to see uber_login in action.
 
     class SessionController < ApplicationController
       def create
@@ -105,8 +106,51 @@ will clear all other logins on any other machine.
 `strong_sessions` will make non persistent sessions to be saved in the database too. On each request the session token
 is checked against the database just like the cookies one. It won't refresh it, however. This allows you to do nice
 things, like logging out users, just by removing the token from the database. Or having a full list of open sessions of
-any kind on any device. Even though this is strongly suggested to be +true+, it might impact performance, issuing a
-query on almost each page load. Be sure to index :uid and :sequence together on the +login_tokens+ table.
+any kind on any device. Even though this is strongly suggested to be *true*, it might impact performance, issuing a
+query on almost each page load. Be sure to index :uid and :sequence together on the *login_tokens* table.
+
+### Callbacks
+UberLogin provides [before after around]_login and [before after around]_logout callbacks. Not all logins come from a
+form, where you explicitly call *login*. Some logins come from cookies, and that happens automagically when you call
+*current_user*. So using an after_login callback can be useful to store login logs. You can use *persistent_login?* to
+see whether the current session is persistent or not.
+
+## Security
+On every login the session is reset. This means that the session ID is regenerated and the content of the session is lost.
+Keep this in mind when using UberLogin. This is to prevent Session Fixation.
+
+UberLogin works using the triplet [UID, Sequence, Token] to identify the user. These are stored in the session, or in cookies,
+and a copy in the database. In particular the Token is hashed with *bcrypt* before being stored in the database. This,
+in case of a direct attack to the database, prevents the attacker from having a list of usable login triplets. The Token
+is only valid when presented with the corresponding UID and Sequence values. The sequence value is not hashed and it's only
+purpose is to differentiate the user between multiple logins.
+
+For example the same user might log in from it's Android Phone, Chrome on a PC and Firefox on another. The three logins
+will have different Sequence values.
+
+UberLogin always uses the HttpOnly flag on cookies to prevent XSS attacks on the login cookies. However Session Hijacking
+is only truly prevented if you use SSL on each and every request to the website. This is rule #1 for any website having
+a login form. Without SSL, not only the attacker can easily read the Session ID or content, but can also intercept the
+login data (email/password) when submitted from the login page.
+
+### More security
+You can enforce stronger security by using the UberLogin options. However all of that have side effects. Disallowing
+multiple logins looks good for offices, where an employee needs only one session at time. On social websites it might be
+a disaster. Also in case of a successful attack, the login made by the attacker would disconnect the legitimate user.
+
+Tying IPs to tokens is only viable if you're sure that all of your users have static IP addresses. Otherwise they may
+be affected by "random" logouts.
+
+Having "strong sessions" will give you the power to logout sessions other than the current, but it will also add a query
+overhead on each request. If you're not interested in this kind of utility, or you see that the overhead is unacceptable
+you can simply opt-out strong sessions.
+
+In the future we'll probably add the possibility of tying the login token to the User Agent. The user would be "random
+disconnected" only if the browser gets updated. However an attacker would need to guess the exact user agent string
+in order to reuse a stolen triplet.
+
+Also, whether you're using HTTPS or not (please, do!), consider not using Session CookieStorage, or at least ensure
+that the session is signed and crypted.
 
 ## Contributing
 
