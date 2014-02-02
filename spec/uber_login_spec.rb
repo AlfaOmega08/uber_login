@@ -286,4 +286,35 @@ describe UberLogin do
       end
     end
   end
+
+  describe '#persistent_login?' do
+    context 'cookies[:uid] and cookies[:ulogin] are set' do
+      before {
+        cookies[:uid] = "100"
+        cookies[:ulogin] = "whatever:beef"
+      }
+
+      context 'the cookies are valid' do
+        before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return true }
+
+        it 'is true' do
+          expect(controller.persistent_login?).to be_true
+        end
+      end
+
+      context 'the cookies are not valid' do
+        before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return false }
+
+        it 'is false' do
+          expect(controller.persistent_login?).to be_false
+        end
+      end
+    end
+
+    context 'cookies are not set' do
+      it 'is false' do
+        expect(controller.persistent_login?).to be_false
+      end
+    end
+  end
 end

@@ -80,6 +80,10 @@ module UberLogin
     cookie_manager.clear
   end
 
+  def persistent_login?
+    cookie_manager.valid?
+  end
+
   private
   def cookie_manager
     @cookie_manager ||= CookieManager.new(cookies, request)
@@ -103,11 +107,14 @@ module UberLogin
   ##
   # Attempts a login from the +:uid+ and +:ulogin+ cookies.
   def login_from_cookies
-    if cookie_manager.valid?
-      session[:uid] = cookies[:uid]
-      generate_new_token
-      session[:ulogin] = cookies[:ulogin]
-      session[:uid]
+    if persistent_login?
+      run_callbacks :login do
+        reset_session
+        session[:uid] = cookies[:uid]
+        generate_new_token
+        session[:ulogin] = cookies[:ulogin]
+        session[:uid]
+      end
     else
       cookie_manager.clear
       nil
