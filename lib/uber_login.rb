@@ -13,6 +13,7 @@ module UberLogin
 
   included do
     define_callbacks :login, :logout
+    @login_from_cookies = nil
   end
 
   ##
@@ -41,6 +42,7 @@ module UberLogin
   # If strong sessions are enabled session[+:ulogin+] is set to the same value that cookies[+:ulogin+] would have
   def login(user, remember = false)
     logout_all unless UberLogin.configuration.allow_multiple_login
+    @login_from_cookies = false
 
     run_callbacks :login do
       if strong_sessions or remember
@@ -80,6 +82,10 @@ module UberLogin
     cookie_manager.clear
   end
 
+  def login_from_cookies?
+    @login_from_cookies
+  end
+
   def persistent_login?
     cookie_manager.valid?
   end
@@ -108,6 +114,8 @@ module UberLogin
   # Attempts a login from the +:uid+ and +:ulogin+ cookies.
   def login_from_cookies
     if persistent_login?
+      @login_from_cookies = true
+
       run_callbacks :login do
         reset_session
         session[:uid] = cookies[:uid]

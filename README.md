@@ -106,14 +106,15 @@ will clear all other logins on any other machine.
 `strong_sessions` will make non persistent sessions to be saved in the database too. On each request the session token
 is checked against the database just like the cookies one. It won't refresh it, however. This allows you to do nice
 things, like logging out users, just by removing the token from the database. Or having a full list of open sessions of
-any kind on any device. Even though this is strongly suggested to be *true*, it might impact performance, issuing a
-query on almost each page load. Be sure to index :uid and :sequence together on the *login_tokens* table.
+any kind on any device. Even though this is strongly suggested to be `true`, it might impact performance, issuing a
+query on almost each page load. Be sure to index :uid and :sequence together on the `login_tokens` table.
 
 ### Callbacks
 UberLogin provides [before after around]_login and [before after around]_logout callbacks. Not all logins come from a
-form, where you explicitly call *login*. Some logins come from cookies, and that happens automagically when you call
-*current_user*. So using an after_login callback can be useful to store login logs. You can use *persistent_login?* to
-see whether the current session is persistent or not.
+form, where you explicitly call `login`. Some logins come from cookies, and that happens automagically when you call
+`current_user`. So using an after_login callback can be useful to store login logs. You can use `persistent_login?` to
+see whether the current session is persistent or not, and `login_from_cookies?` to see if the login come from a form or
+from cookies. login_from_cookies? only works in the same request of the login. On other requests it's nil.
 
 ## Security
 On every login the session is reset. This means that the session ID is regenerated and the content of the session is lost.

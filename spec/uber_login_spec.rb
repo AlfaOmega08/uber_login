@@ -317,4 +317,51 @@ describe UberLogin do
       end
     end
   end
+
+  describe '#login_from_cookies?' do
+    context 'cookies are not set' do
+      context 'session is not set' do
+        context 'after a login' do
+          it 'be false' do
+            controller.login(user)
+            expect(controller.login_from_cookies?).to be_false
+          end
+        end
+
+        context 'other pages' do
+          it 'is nil' do
+            expect(controller.login_from_cookies?).to be_nil
+          end
+        end
+      end
+    end
+
+    context 'cookies[:uid] and cookies[:ulogin] are set' do
+      before {
+        cookies[:uid] = "100"
+        cookies[:ulogin] = "whatever:beef"
+        session[:uid] = nil
+      }
+
+      context 'the cookies are valid' do
+        before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return true }
+
+        context 'on cookie login' do
+          it 'is true' do
+            controller.current_user
+            expect(controller.login_from_cookies?).to be_true
+          end
+        end
+      end
+
+      context 'the cookies are not valid' do
+        before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return false }
+
+        it 'is nil' do
+          controller.current_user
+          expect(controller.login_from_cookies?).to be_nil
+        end
+      end
+    end
+  end
 end
