@@ -42,6 +42,9 @@ class ApplicationController
     @cookies = FakeCookieJar.new
     @request = FakeRequest.new
   end
+
+  def reset_session
+  end
 end
 
 # This is required to be an ActiveRecord like class

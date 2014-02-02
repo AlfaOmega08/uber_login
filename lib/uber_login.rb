@@ -50,6 +50,7 @@ module UberLogin
         composite = nil
       end
 
+      reset_session
       session_manager.login(user.id, composite)
     end
   end

@@ -41,6 +41,11 @@ describe UberLogin do
         end
       end
 
+      it 'resets the session' do
+        expect(controller).to receive :reset_session
+        controller.login(user)
+      end
+
       it 'runs the :login callbacks' do
         expect(controller).to receive(:run_callbacks).with(:login)
         controller.login(user)
@@ -65,6 +70,11 @@ describe UberLogin do
 
       it 'sets both cookies as persistent' do
         expect(cookies).to receive(:permanent).twice.and_return cookies
+        controller.login(user, true)
+      end
+
+      it 'resets the session' do
+        expect(controller).to receive :reset_session
         controller.login(user, true)
       end
     end
@@ -222,6 +232,11 @@ describe UberLogin do
 
         context 'the cookies are valid' do
           before { UberLogin::CookieManager.any_instance.stub(:valid?).and_return true }
+
+          it 'resets the session' do
+            expect(controller).to receive :reset_session
+            controller.login(user, true)
+          end
 
           it 'runs the :login callbacks' do
             expect(controller).to receive(:run_callbacks)
