@@ -2,7 +2,7 @@ module UberLogin
   class Storage
     class << self
       def find(uid, sequence)
-        LoginToken.find_by(uid: uid, sequence: sequence)
+        LoginToken.where(uid: uid, sequence: sequence).first
       end
 
       def find_composite(uid, composite)

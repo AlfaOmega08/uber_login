@@ -43,17 +43,18 @@ module UberLogin
   def login(user, remember = false)
     logout_all unless UberLogin.configuration.allow_multiple_login
     @login_from_cookies = false
+    uid = get_uid(user)
 
     run_callbacks :login do
       if strong_sessions or remember
-        composite = generate_and_save_token(user.id)
-        cookie_manager.persistent_login(user.id, composite) if remember
+        composite = generate_and_save_token(uid)
+        cookie_manager.persistent_login(uid, composite) if remember
       else
         composite = nil
       end
 
       reset_session
-      session_manager.login(user.id, composite)
+      session_manager.login(uid, composite)
     end
   end
 
@@ -192,6 +193,11 @@ module UberLogin
 
   def strong_sessions
     UberLogin.configuration.strong_sessions
+  end
+
+  def get_uid(user)
+    uid = user.id
+    uid = uid.to_s if uid.is_a? BSON::ObjectId
   end
 
   def current_sequence
