@@ -197,7 +197,12 @@ module UberLogin
 
   def get_uid(user)
     uid = user.id
-    uid = uid.to_s if uid.is_a? BSON::ObjectId
+    begin
+      uid = uid.to_s if uid.is_a? BSON::ObjectId
+    rescue Exception
+    end
+
+    uid
   end
 
   def current_sequence
