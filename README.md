@@ -47,7 +47,7 @@ Now add this line in `ApplicationController`:
 
 To work UberLogin requires a table (or a collection if you came from **MongoDB**). Generate it:
 
-    rails g model login_tokens uid:integer sequence:string token:string
+    rails g model login_token uid:integer sequence:string token:string
 
 On MongoDB you probably want uid to be a string.
 
