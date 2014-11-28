@@ -55,6 +55,7 @@ module UberLogin
 
       reset_session
       session_manager.login(uid, composite)
+      @current_user = user
     end
   end
 
