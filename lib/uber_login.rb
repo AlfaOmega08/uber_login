@@ -64,19 +64,17 @@ module UberLogin
   # and corresponding token removed from the database.
   # If sequence is not nil it only removes the sequence and token from the database.
   def logout(sequence = nil)
-    if current_user
-      run_callbacks :logout do
-        if sequence.nil? or sequence == current_sequence
-          delete_from_database if cookies[:uid] or strong_sessions
-          session_manager.clear
-          cookie_manager.clear
-        else
-          delete_from_database(sequence)
-        end
+    run_callbacks :logout do
+      if sequence.nil? or sequence == current_sequence
+        delete_from_database if cookies[:uid] or strong_sessions
+        session_manager.clear
+        cookie_manager.clear
+      else
+        delete_from_database(sequence)
       end
-
-      @current_user = nil
     end
+
+    @current_user = nil
   end
 
   ##
@@ -113,7 +111,7 @@ module UberLogin
       login_from_cookies if cookie_manager.login_cookies?
     end
 
-    User.find(session[:uid]) rescue nil
+    UberLogin.configuration.user_class.constantize.find(session[:uid]) rescue nil
   end
 
   ##

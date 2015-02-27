@@ -28,11 +28,15 @@ module UberLogin
     # each page load. Be sure to index :uid and :sequence together on the +login_tokens+ table.
     attr_accessor :strong_sessions
 
+    # If your User model is named something different than User, you can specify your user model here.
+    attr_accessor :user_class
+
     def initialize
       self.allow_multiple_login = true
       self.token_expiration = nil
       self.tie_tokens_to_ip = false
       self.strong_sessions = true
+      self.user_class = "User"
     end
   end
 
