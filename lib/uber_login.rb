@@ -172,8 +172,10 @@ module UberLogin
   # the current session.
   def delete_from_database(sequence = nil)
     sequence = sequence || current_sequence
-    token = Storage.find(cookies[:uid] || session[:uid], sequence)
-    token.destroy if token
+    if sequence
+      token = Storage.find(cookies[:uid] || session[:uid], sequence)
+      token.destroy if token
+    end
   end
 
   def set_user_data(row)
@@ -209,6 +211,8 @@ module UberLogin
   end
 
   def current_sequence
-    TokenEncoder.sequence(cookies[:ulogin] || session[:ulogin])
+    if cookies[:ulogin] || session[:ulogin]
+      TokenEncoder.sequence(cookies[:ulogin] || session[:ulogin])
+    end
   end
 end

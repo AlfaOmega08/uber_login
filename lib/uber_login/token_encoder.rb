@@ -17,15 +17,23 @@ module UberLogin
       end
 
       def decode(composite)
-        composite.split(':')
+        if composite
+          composite.split(':')
+        else
+          [ nil, nil ]
+        end
       end
 
       def sequence(composite)
-        decode(composite)[0]
+        if composite
+          decode(composite)[0]
+        end
       end
 
       def token(composite)
-        decode(composite)[1]
+        if composite
+          decode(composite)[1]
+        end
       end
 
       def token_hash(composite)
