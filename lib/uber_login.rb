@@ -53,7 +53,6 @@ module UberLogin
         composite = nil
       end
 
-      reset_session
       session_manager.login(uid, composite)
       @current_user = user
     end
@@ -69,6 +68,7 @@ module UberLogin
         delete_from_database if cookies[:uid] or strong_sessions
         session_manager.clear
         cookie_manager.clear
+        reset_session
       else
         delete_from_database(sequence)
       end
@@ -121,7 +121,6 @@ module UberLogin
       @login_from_cookies = true
 
       run_callbacks :login do
-        reset_session
         session[:uid] = cookies[:uid]
         generate_new_token
         session[:ulogin] = cookies[:ulogin]
