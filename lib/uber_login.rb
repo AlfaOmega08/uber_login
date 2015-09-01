@@ -111,7 +111,10 @@ module UberLogin
       login_from_cookies if cookie_manager.login_cookies?
     end
 
-    UberLogin.configuration.user_class.constantize.find(session[:uid]) rescue nil
+    if session[:uid].is_a? String
+      klass, uid = session[:uid].split('|')
+      klass.constantize.find(uid) rescue nil
+    end
   end
 
   ##
@@ -206,7 +209,7 @@ module UberLogin
     rescue Exception
     end
 
-    uid
+    "#{user.class.name}|#{uid}"
   end
 
   def current_sequence
